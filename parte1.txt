@@ -1,0 +1,31 @@
+Errores:
+- en la linea messageText.trim(); no hay valor de retorno... las funciones sobre el objeto String deben setear su respuesta sobre otro objeto.
+	Con colocar messageText = messageText.trim(); es suficiente
+- La variable "String l" no se inicializa, por lo que al ejecutar la primera operacion de concatenado lanzará error (no se puede concatener null con un String)
+	Se deberia quitar la primera parte de la operacion l =  l + [texto] -> por l = [texto]
+- No se registran los valores de fecha seteados en "l" en ningun log.
+	En los loggers se registran solo el texto messageText, menos en BD) pero se deberia enviar el valor de "l" el cual primero se debe validar si es null, ya que se puede enviar a registrar un log solamente con warning, pero no haberlo configurado.
+	Ademas, si el mensaje puede ser solo de un tipo: Message, Error o Warning, no tiene sentido concatenar varias veces el mensaje, transformar los if en if/else es mas limpio.
+- Entenderia que en la línea que registra el log en BD, no se quiere registrar un booleano sino el mensaje, stmt.executeUpdate("insert into Log_Values('" + message + "', " + String.valueOf(t) + ")");
+	Cambiar la línea a: stmt.executeUpdate("insert into Log_Values('" + messageText + "', " + String.valueOf(t) + ")"); O en su defecto suplantar l por messageText ya que es el contenido del mensaje completo.
+- el parametro dbParams no se valida si esta vacio o que pasa cuando alguna variable no se encuentra.
+
+	
+Comentarios:
+- La constante initialized no se usa.
+	Accion: Eliminar.
+- Ordenaria la lógica del método LogMessage para tener separados los bloques de BD, File y Consola, de forma de que sea mas legible y que solo ejecute las opciones necesarias (ej, si no se registra log en la BD, no generar conexion a esta).
+- No tiene sentido manejar 3 booleanos para marcar el tipo de mensaje en el método "LogMessage" (Error, Warning, Message)... Según la descripcion del ejercicio el mensaje a loguear es solo uno de los 3 tipos.
+	Sugerencia: Cambiar el Booleano a un Enum, o una constante con reglas (EJ: usando el valor de t), esto simplificaria las validaciones subsiguientes, asi como las llamadas al método, similar a lo que se hace con el int t.
+	Como se desea controlar que nivel se loguea, los booleanos en el constructor se mantienen.
+- No es necesario crear un archivo nuevo para usar el FileHandler, pero la carpeta configurada en dbParams debe existir para poder setear el log.
+- El consoleHandler es innecesario setearlo cada vez ya que Logger por defecto lo usa.
+- Como la clase funciona de forma estática, no tiene sentido tener un solo objeto logger para los 3 tipos de loggeo, ya que siempre mantiene las configuraciones anteriores. Por defecto la clase Logger usa el ConsoleAppender en stderr.
+	Se puede configurar un segundo Logger para marcar las veces que se usa el FileHandler.
+
+Otros comentarios:
+- Para dar mejor uso al level propio de la clase, se puede condicionar usar el nivel adecuado de Logger con el del mensaje del log que enviamos.
+- Se puede usar la libreria Log4J para configurar los loggers en un archivo de properties, incluso tener 3 loggers diferentes para logguear en BD, File y Consola como stdout. De todas maneras se usaria la clase JobLogger para agregar las configuraciones adicionales con 3 loggers en vez de uno (segun lo nombramos en el properties) y usar el que aplique segun la definición (los parámetros booleanos). Esto es mas util, porque la configuración compleja (como las propiedades de la BD, o el archivo) la haces fuera de la clase y la lógica solo validaría el uso del logger según el boolean que elijas. Al tener 3 loggers con nombre, es más fácil solo logguear a un archivo o BD sin que se vea el log en la consola, dando real utilidad a la división que se quiere.
+- Incluso se puede configurar porque cada log al File sea un archivo diferente.
+- Por ultimo, es importante notar que al ser una clase estática, cada configuracion de parametros sobreescribe las anteriores.
+
